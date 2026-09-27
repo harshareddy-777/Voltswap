@@ -1,122 +1,294 @@
-# Volt Swap
+# VoltSwap — Smart Battery Swapping Platform
 
-Flutter mobile app for a battery swapping system with Supabase backend and a map-first UI.
+VoltSwap is an **IoT-enabled smart battery swapping platform for electric vehicles**, developed using **Flutter, Supabase, ESP32, and Embedded C++**. The system integrates a mobile application, cloud backend, and ESP32-based hardware to enable real-time battery monitoring, station management, and automated battery swapping operations.
+
+The project was **fully implemented and demonstrated using an ESP32-based prototype**, showcasing communication between the embedded hardware, cloud database, and mobile application.
+
+## Project Overview
+
+The system is designed to simplify EV battery swapping by allowing users to locate available swapping stations, view battery availability and charge levels, request a battery, and receive a QR code for the swap process.
+
+The ESP32 acts as the embedded hardware controller and provides battery and slot information to the cloud backend. The Flutter application retrieves this information in real time and presents it to users and administrators.
+
+### System Architecture
+
+**ESP32 Hardware → Supabase Backend → Flutter Mobile Application**
+
+* **ESP32:** Embedded controller for battery slot monitoring and hardware interaction.
+* **Supabase:** Cloud backend for authentication, database management, and real-time data synchronization.
+* **Flutter:** Cross-platform mobile application for users and administrators.
+* **Google Maps:** Location-based visualization of battery swapping stations.
 
 ## Features Implemented
 
-- **User Authentication**: Email/password signup with new fields:
-  - Vehicle Number (alphanumeric - e.g., TS09AB1234)
-  - Aadhar Number (12-digit unique ID)
-- Separate admin login flow from the login page (no automatic role routing).
-- **User Map Home**: Google Maps with:
-  - User's current location marker (blue "My Location" pin)
-  - Battery swap station markers (orange)
-- Station details with slots and battery request logic.
-- Request logic picks the highest `charge_percentage` from slots with `battery_present = true`.
-- QR generation after request containing `station_id`, `slot_id`, `charge_percentage`.
-- Profile tab with:
-  - Account details (View/Edit)
-  - Aadhar Number (Read-only)
-  - Vehicle Number (Editable)
-  - Swap history
-  - Sign out
-- Admin dashboard with:
-  - Add stations
-  - Toggle station status
-  - Manage slot stock
-  - Advanced Options page for admin features
-- **Advanced Options** (Admin only):
-  - "Deallocate All Batteries" feature with confirmation dialog
-  - Clears all user battery allocations in one action
-- No dummy stations; stations appear only when admin creates them.
+### User Features
+
+* User registration and authentication using email and password.
+* Vehicle number and Aadhaar number registration.
+* Google Maps-based home screen.
+* Real-time display of battery swapping stations.
+* Current location visualization.
+* Station markers with battery and slot information.
+* Station details including available slots and battery charge levels.
+* Automatic selection of the battery with the highest `charge_percentage`.
+* Battery swap request functionality.
+* QR code generation containing:
+
+  * Station ID
+  * Slot ID
+  * Battery charge percentage
+* Battery health and charge monitoring.
+* Swap history tracking.
+* Profile management.
+* Vehicle number editing.
+* Aadhaar number displayed as read-only.
+* Secure sign-out functionality.
+
+### Admin Features
+
+* Separate administrator login.
+* Add and manage battery swapping stations.
+* Enable or disable station status.
+* Manage battery slot availability.
+* Monitor battery stock.
+* View and manage station information.
+* Advanced options for battery allocation.
+* **Deallocate All Batteries** functionality with confirmation.
+* Real-time management of battery and station data.
+
+## ESP32 & IoT Integration
+
+The project was implemented with an **ESP32-based embedded system** to demonstrate real-time communication between the physical battery-swapping hardware and the cloud backend.
+
+The ESP32 was programmed using **C++** and integrated with the system to monitor and update battery slot parameters such as:
+
+* `charge_percentage`
+* `battery_present`
+* Battery slot status
+* Battery availability
+
+The ESP32 communicates the hardware status to the backend, allowing the Flutter application to display updated battery information in real time.
+
+The complete system was **tested and demonstrated using the ESP32 prototype**, validating the hardware–software integration and real-time data flow.
+
+## Battery Selection Logic
+
+When a user requests a battery swap, the system checks the available battery slots and selects the battery with the **highest charge percentage** among slots where:
+
+```text
+battery_present = true
+```
+
+The selected battery and slot information are then associated with the user's swap request.
+
+## QR-Based Battery Swap
+
+After a successful battery request, the application generates a QR code containing the relevant swap information:
+
+```text
+Station ID
+Slot ID
+Charge Percentage
+```
+
+This QR code can be used as part of the battery-swapping workflow at the station.
+
+## Technology Stack
+
+### Software
+
+* **Flutter**
+* **Dart**
+* **Supabase**
+* **PostgreSQL**
+* **Google Maps API**
+
+### Embedded / Hardware
+
+* **ESP32**
+* **Embedded C++**
+* IoT communication
+* Battery slot monitoring
+* Real-time hardware data updates
+
+### Project Concepts
+
+* IoT
+* Embedded Systems
+* Mobile Application Development
+* Cloud Database
+* Real-Time Data Synchronization
+* Hardware–Software Integration
+* EV Battery Management
+* QR-Based Authentication/Identification
 
 ## Project Structure
 
-- `lib/screens`
-- `lib/models`
-- `lib/services`
-- `lib/utils`
+```text
+VoltSwap/
+│
+├── lib/
+│   ├── screens/
+│   ├── models/
+│   ├── services/
+│   └── utils/
+│
+├── master_schema.sql
+├── android/
+├── ios/
+├── pubspec.yaml
+└── README.md
+```
+
+## Database Structure
+
+The Supabase backend contains the following primary entities:
+
+### Users
+
+Stores user account and vehicle information.
+
+```text
+id
+email
+name
+phone
+vehicle_number
+aadhar_number
+current_battery_slot_id
+current_station_id
+assigned_battery_id
+battery_status
+created_at
+updated_at
+```
+
+### Stations
+
+Stores battery swapping station information.
+
+```text
+station_id
+latitude
+longitude
+status
+created_at
+updated_at
+```
+
+### Slots
+
+Stores individual battery slot and battery status information.
+
+```text
+id
+slot_id
+station_id
+charge_percentage
+battery_present
+created_at
+updated_at
+```
+
+### Swap Requests
+
+Stores user battery swap requests and their status.
+
+```text
+id
+user_id
+station_id
+slot_id
+status
+created_at
+updated_at
+```
+
+## Security
+
+Row Level Security (RLS) policies were implemented in Supabase to control database access.
+
+* Users can view and update their own profile.
+* Users can create and view their own swap requests.
+* Authenticated users can read station and slot information.
+* Administrative operations are restricted to authorized access.
+
+## Real-Time Data Flow
+
+The completed system follows this data flow:
+
+```text
+       ESP32
+         │
+         │ Battery / Slot Data
+         ▼
+   Supabase Backend
+         │
+         │ Real-Time Updates
+         ▼
+   Flutter Application
+         │
+         ├── User Interface
+         ├── Station Map
+         ├── Battery Status
+         └── Swap Requests
+```
+
+This enables the application to reflect changes in battery availability and charge status without relying on static or dummy station data.
+
+## Demonstration
+
+The complete VoltSwap system was **implemented and successfully demonstrated using an ESP32-based hardware prototype**.
+
+The demonstration showcased:
+
+* ESP32-based battery slot monitoring
+* Real-time battery status updates
+* Cloud database synchronization
+* Flutter mobile application integration
+* Battery station visualization
+* Battery availability and charge monitoring
+* Battery swap request workflow
+* QR code generation
+* Admin station and battery management
 
 ## Setup
 
-1. Install dependencies:
-   - `flutter pub get`
-2. Update `lib/utils/app_config.dart`:
-   - `supabaseUrl`
-   - `supabaseAnonKey`
-   - `adminEmail`
-   - `adminPassword`
-3. Add your Google Maps API key to Android/iOS app manifests.
-4. Run:
-   - `flutter run`
+### 1. Install Flutter Dependencies
 
-## Supabase SQL Schema
-
-See `/master_schema.sql` for the complete production-ready schema or use the master SQL code below:
-
-```sql
--- USERS TABLE (with new fields: vehicle_number, aadhar_number, admin battery allocation)
-create table if not exists users (
-  id uuid primary key,
-  email text unique not null,
-  name text not null,
-  phone text,
-  vehicle_number text,
-  aadhar_number text,
-  current_battery_slot_id integer,
-  current_station_id text,
-  assigned_battery_id integer,
-  battery_status text default 'none',
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
--- STATIONS TABLE
-create table if not exists stations (
-  station_id text primary key,
-  latitude double precision not null,
-  longitude double precision not null,
-  status text default 'active',
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
--- SLOTS TABLE (with id UUID for flexibility)
-create table if not exists slots (
-  id uuid primary key default uuid_generate_v4(),
-  slot_id integer not null,
-  station_id text not null references stations(station_id) on delete cascade,
-  charge_percentage integer default 0,
-  battery_present boolean default false,
-  unique (station_id, slot_id),
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
--- SWAP_REQUESTS TABLE
-create table if not exists swap_requests (
-  id uuid primary key default uuid_generate_v4(),
-  user_id uuid not null references users(id) on delete cascade,
-  station_id text not null references stations(station_id) on delete cascade,
-  slot_id integer not null,
-  status text default 'pending' check (status in ('pending', 'success', 'failed')),
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
+```bash
+flutter pub get
 ```
 
-## RLS Policies (Implemented)
+### 2. Configure Supabase
 
-- `users`: Users can view/update own profile only
-- `swap_requests`: Users can view/create own swap requests only
-- `stations`, `slots`: All authenticated users can read
-- Admin operations: Use service role or authenticated endpoints
+Update:
 
-## ESP32 Future Support
+```text
+lib/utils/app_config.dart
+```
 
-The schema and services are ready for future API updates to `slots`:
+with the required Supabase configuration.
 
-- `charge_percentage`
-- `battery_present`
+### 3. Configure Google Maps
 
-You can later expose an authenticated HTTP endpoint to update `slots`, and UI will automatically reflect changes because station lists are streamed from Supabase.
+Add the Google Maps API key to the Android/iOS application configuration.
+
+### 4. Configure ESP32
+
+Program the ESP32 with the embedded C++ firmware and configure the required network and backend communication parameters.
+
+### 5. Run the Application
+
+```bash
+flutter run
+```
+
+## Project Status
+
+**Completed and Demonstrated**
+
+VoltSwap has been fully developed as an integrated **Flutter + Supabase + ESP32 IoT system** and successfully demonstrated using a working hardware prototype.
+
+The project demonstrates practical implementation of **embedded systems, IoT communication, cloud databases, mobile application development, real-time data synchronization, and hardware–software integration** for an EV battery-swapping application.
+
